@@ -13,21 +13,17 @@ use core::panic::PanicInfo;
 ///
 /// This function is not allowed to return
 pub extern "C" fn _start() -> ! {
-    use core::fmt::Write;
-    vga_buffer::WRITER.lock().write_str("Hello again").unwrap();
-    write!(
-        vga_buffer::WRITER.lock(),
-        ", some numbers: {} {}",
-        42,
-        1.0 / 3.0
-    )
-    .unwrap();
+    println!("Hello world!");
+
+    panic!("End of kernel!");
 
     loop {}
 }
 
 #[panic_handler]
 /// This function is called on panic
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
+
     loop {}
 }
