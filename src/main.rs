@@ -47,11 +47,27 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
     }
 }
 
+#[cfg(not(test))]
 #[panic_handler]
-/// This function is called on panic
+/// This function is called on panic, and prints the panic information to the vga text buffer
+///
+/// It also goes into an infinite loop, so we can observe what went wrong.
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
 
+    loop {}
+}
+
+#[cfg(test)]
+#[panic_handler]
+/// This function is called on panic, and prints the panic information to the vga text buffer and the serial interface
+///
+/// It also exits qemu with failure
+fn panic(info: &PanicInfo) -> ! {
+    serial_println!("[failed]");
+    println!("{}", info);
+    serial_println!("{}", info);
+    exit_qemu(QemuExitCode::Failed);
     loop {}
 }
 
