@@ -7,6 +7,7 @@
 
 //! This module contains the entry point for the kernel.
 
+mod serial;
 mod vga_buffer;
 
 use core::panic::PanicInfo;
@@ -56,17 +57,17 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[cfg(test)]
 fn test_runner(tests: &[&dyn Fn()]) {
-    println!("Running {} tests", tests.len());
+    serial_println!("Running {} tests", tests.len());
     for test in tests {
         test();
     }
-    println!("Ran {} tests", tests.len());
+    serial_println!("Ran {} tests", tests.len());
     exit_qemu(QemuExitCode::Success);
 }
 
 #[test_case]
 fn trivial_assertion() {
-    print!("Trivial assertion... ");
-    assert_eq!(1, 1);
-    println!("[ok]");
+    serial_print!("Trivial assertion... ");
+    assert_eq!(0, 1);
+    serial_println!("[ok]");
 }
