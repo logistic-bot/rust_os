@@ -11,6 +11,11 @@ pub mod interrupts;
 pub mod serial;
 pub mod vga_buffer;
 
+/// Initialize hardware and software
+pub fn init() {
+    interrupts::init_idt();
+}
+
 /// This trait marks a function as testable. It is used for testing
 pub trait Testable {
     fn run(&self);
