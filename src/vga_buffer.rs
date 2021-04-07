@@ -12,6 +12,7 @@ use volatile::Volatile;
 #[repr(u8)]
 
 /// This is a color.
+#[allow(missing_docs)]
 pub enum Color {
     Black = 0,
     Blue = 1,
@@ -32,6 +33,7 @@ pub enum Color {
 }
 
 lazy_static! {
+    /// Global writer instance
     pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
         column_position: 0,
         color_code: ColorCode::new(Color::Yellow, Color::Black),
@@ -66,6 +68,7 @@ struct Buffer {
     chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
+/// Handle writing to the vga text buffer
 pub struct Writer {
     column_position: usize,
     color_code: ColorCode,
@@ -73,6 +76,7 @@ pub struct Writer {
 }
 
 impl Writer {
+    /// Write a string of text to the vga text buffer.
     pub fn write_string(&mut self, s: &str) {
         for byte in s.bytes() {
             match byte {
@@ -83,6 +87,7 @@ impl Writer {
         }
     }
 
+    /// Write a single byte to the vga text buffer, interpteting newlines and replacing non-ascii characters with a square.
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
             b'\n' => self.new_line(),

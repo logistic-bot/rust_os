@@ -51,6 +51,8 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     println!("{}", info);
     serial_println!("{}", info);
     exit_qemu(QemuExitCode::Failed);
+
+    #[allow(clippy::empty_loop)]
     loop {}
 }
 
@@ -60,6 +62,8 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
 pub extern "C" fn _start() -> ! {
     init();
     test_main();
+
+    #[allow(clippy::empty_loop)]
     loop {}
 }
 
