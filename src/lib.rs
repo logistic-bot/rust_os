@@ -54,9 +54,11 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     loop {}
 }
 
+/// Entry point for tests
 #[cfg(test)]
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    init();
     test_main();
     loop {}
 }
