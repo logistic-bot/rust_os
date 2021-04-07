@@ -19,7 +19,9 @@ pub extern "C" fn _start() -> ! {
 
     rust_os::init();
 
-    x86_64::instructions::interrupts::int3();
+    unsafe {
+        *(0xdeadc0de as *mut u64) = 42;
+    }
 
     #[cfg(test)]
     test_main();
