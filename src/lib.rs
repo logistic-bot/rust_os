@@ -19,6 +19,7 @@ pub fn init() {
     unsafe {
         interrupts::PICS.lock().initialize();
     };
+    x86_64::instructions::interrupts::enable();
 }
 
 /// This trait marks a function as testable. It is used for testing
