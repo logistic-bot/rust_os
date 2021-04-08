@@ -16,6 +16,9 @@ pub mod vga_buffer;
 pub fn init() {
     gdt::init();
     interrupts::init_idt();
+    unsafe {
+        interrupts::PICS.lock().initialize();
+    };
 }
 
 /// This trait marks a function as testable. It is used for testing
