@@ -12,6 +12,12 @@ pub mod interrupts;
 pub mod serial;
 pub mod vga_buffer;
 
+pub fn hlt_loop() -> ! {
+    loop {
+        x86_64::instructions::hlt();
+    }
+}
+
 /// Initialize hardware and software
 pub fn init() {
     gdt::init();
@@ -58,8 +64,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     serial_println!("{}", info);
     exit_qemu(QemuExitCode::Failed);
 
-    #[allow(clippy::empty_loop)]
-    loop {}
+    hlt_loop();
 }
 
 /// Entry point for tests
@@ -69,8 +74,7 @@ pub extern "C" fn _start() -> ! {
     init();
     test_main();
 
-    #[allow(clippy::empty_loop)]
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(test)]
