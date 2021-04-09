@@ -22,8 +22,12 @@ pub extern "C" fn _start() -> ! {
     #[cfg(test)]
     test_main();
 
+    use rust_os::print;
     #[allow(clippy::empty_loop)]
-    loop {}
+    loop {
+        for _ in 0..10000 {}
+        print!("-");
+    }
 }
 
 #[cfg(not(test))]
