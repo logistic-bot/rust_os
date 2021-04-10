@@ -20,9 +20,34 @@ mod undoc {
 ///
 /// This function is not allowed to return
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-    println!("         Initialzing...");
+    use rust_os::memory::active_level_4_table;
+    use x86_64::structures::paging::PageTable;
+    use x86_64::VirtAddr;
 
+    println!("         Initialzing...");
     rust_os::init();
+
+    let physical_memory_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let l4_table = unsafe { active_level_4_table(physical_memory_offset) };
+
+    for (i, entry) in l4_table.iter().enumerate() {
+        if !entry.is_unused() {
+            rust_os::serial_println!("L4 {}: {:?}", i, entry);
+
+            // Get the physical address from the entry and convert it
+            let phys = entry.frame().unwrap().start_address();
+            let virt = phys.as_u64() + boot_info.physical_memory_offset;
+            let ptr = VirtAddr::new(virt).as_mut_ptr();
+            let l3_table: &PageTable = unsafe { &*ptr };
+
+            // print non-empty entries of level 3 table
+            for (i, entry) in l3_table.iter().enumerate() {
+                if !entry.is_unused() {
+                    rust_os::serial_println!("  L3 {}: {:?}", i, entry);
+                }
+            }
+        }
+    }
 
     #[cfg(test)]
     test_main();
