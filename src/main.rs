@@ -7,22 +7,27 @@
 
 //! This module contains the entry point for the kernel.
 
+use bootloader::BootInfo;
 use core::panic::PanicInfo;
 use rust_os::println;
 
-#[no_mangle]
+mod undoc {
+    use bootloader::entry_point;
+    entry_point!(crate::kernel_main);
+}
+
 /// Kernel entry point
 ///
 /// This function is not allowed to return
-pub extern "C" fn _start() -> ! {
-    println!("Hello world!");
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
+    println!("         Initialzing...");
 
     rust_os::init();
 
     #[cfg(test)]
     test_main();
 
-    println!("Initialized.");
+    println!("[  OK  ] Kernel initialized");
     rust_os::hlt_loop();
 }
 
