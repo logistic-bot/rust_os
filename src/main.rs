@@ -20,13 +20,14 @@ mod undoc {
 ///
 /// This function is not allowed to return
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-    use rust_os::memory::translate_address;
-    use x86_64::VirtAddr;
+    use rust_os::memory;
+    use x86_64::{structures::paging::Translate, VirtAddr};
 
-    println!("         Initialzing...");
+    println!("Initialzing...");
     rust_os::init();
 
     let physical_memory_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mapper = unsafe { memory::init(physical_memory_offset) };
 
     let addresses = [
         // the identity-mapped vga_buffer page
@@ -41,8 +42,8 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     for &address in &addresses {
         let virt = VirtAddr::new(address);
-        let phys = unsafe { translate_address(virt, physical_memory_offset) };
-        serial_println!("{:?} -> {:?}", virt, phys);
+        let phys = mapper.translate_addr(virt);
+        println!("{:?} -> {:?}", virt, phys);
     }
 
     #[cfg(test)]
