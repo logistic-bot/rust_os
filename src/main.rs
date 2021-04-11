@@ -9,7 +9,7 @@
 
 use bootloader::BootInfo;
 use core::panic::PanicInfo;
-use rust_os::println;
+use rust_os::{println, serial_println};
 
 mod undoc {
     use bootloader::entry_point;
@@ -20,33 +20,29 @@ mod undoc {
 ///
 /// This function is not allowed to return
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-    use rust_os::memory::active_level_4_table;
-    use x86_64::structures::paging::PageTable;
+    use rust_os::memory::translate_address;
     use x86_64::VirtAddr;
 
     println!("         Initialzing...");
     rust_os::init();
 
     let physical_memory_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let l4_table = unsafe { active_level_4_table(physical_memory_offset) };
 
-    for (i, entry) in l4_table.iter().enumerate() {
-        if !entry.is_unused() {
-            rust_os::serial_println!("L4 {}: {:?}", i, entry);
+    let addresses = [
+        // the identity-mapped vga_buffer page
+        0xb8000,
+        // some code page
+        0x201008,
+        // some stack page
+        0x0100_0020_1a10,
+        // virtual address mapped to physical address 0
+        boot_info.physical_memory_offset,
+    ];
 
-            // Get the physical address from the entry and convert it
-            let phys = entry.frame().unwrap().start_address();
-            let virt = phys.as_u64() + boot_info.physical_memory_offset;
-            let ptr = VirtAddr::new(virt).as_mut_ptr();
-            let l3_table: &PageTable = unsafe { &*ptr };
-
-            // print non-empty entries of level 3 table
-            for (i, entry) in l3_table.iter().enumerate() {
-                if !entry.is_unused() {
-                    rust_os::serial_println!("  L3 {}: {:?}", i, entry);
-                }
-            }
-        }
+    for &address in &addresses {
+        let virt = VirtAddr::new(address);
+        let phys = unsafe { translate_address(virt, physical_memory_offset) };
+        serial_println!("{:?} -> {:?}", virt, phys);
     }
 
     #[cfg(test)]
@@ -63,6 +59,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 /// It also goes into an infinite loop, so we can observe what went wrong.
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
+    serial_println!("{}", info);
 
     rust_os::hlt_loop();
 }
