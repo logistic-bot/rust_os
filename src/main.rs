@@ -1,4 +1,4 @@
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
@@ -16,40 +16,35 @@ mod undoc {
     entry_point!(crate::kernel_main);
 }
 
+//noinspection RsUnresolvedReference // Needed because of test_main
 /// Kernel entry point
 ///
 /// This function is not allowed to return
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use rust_os::memory;
-    use x86_64::{structures::paging::Translate, VirtAddr};
+    use x86_64::{structures::paging::Page, VirtAddr};
 
     println!("Initialzing...");
     rust_os::init();
 
     let physical_memory_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mapper = unsafe { memory::init(physical_memory_offset) };
+    let mut mapper = unsafe { memory::init(physical_memory_offset) };
+    let mut frame_allocator = unsafe {
+        memory::BootinfoFrameAllocator::init(&boot_info.memory_map)
+    };
 
-    let addresses = [
-        // the identity-mapped vga_buffer page
-        0xb8000,
-        // some code page
-        0x201008,
-        // some stack page
-        0x0100_0020_1a10,
-        // virtual address mapped to physical address 0
-        boot_info.physical_memory_offset,
-    ];
+    // Map an unused page
+    let page = Page::containing_address(VirtAddr::new(0xdeadc0de));
+    memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
 
-    for &address in &addresses {
-        let virt = VirtAddr::new(address);
-        let phys = mapper.translate_addr(virt);
-        println!("{:?} -> {:?}", virt, phys);
-    }
+    // Write the string New! to the screen through the new mapping
+    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
 
     #[cfg(test)]
-    test_main();
+        test_main();
 
-    println!("[  OK  ] Kernel initialized");
+    println!("Kernel initialized");
     rust_os::hlt_loop();
 }
 
