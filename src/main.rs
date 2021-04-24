@@ -7,16 +7,20 @@
 
 //! This module contains the entry point for the kernel.
 
+extern crate alloc;
+
 use bootloader::BootInfo;
 use core::panic::PanicInfo;
 use rust_os::{println, serial_println};
+use alloc::boxed::Box;
 
 mod undoc {
     use bootloader::entry_point;
     entry_point!(crate::kernel_main);
 }
 
-//noinspection RsUnresolvedReference // Needed because of test_main
+//noinspection RsUnresolvedReference
+// Needed because of test_main
 /// Kernel entry point
 ///
 /// This function is not allowed to return
@@ -27,19 +31,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     println!("Initialzing...");
     rust_os::init();
 
-    let physical_memory_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mut mapper = unsafe { memory::init(physical_memory_offset) };
-    let mut frame_allocator = unsafe {
-        memory::BootinfoFrameAllocator::init(&boot_info.memory_map)
-    };
-
-    // Map an unused page
-    let page = Page::containing_address(VirtAddr::new(0xdeadc0de));
-    memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
-
-    // Write the string New! to the screen through the new mapping
-    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
-    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
+    let x = Box::new(42);
 
     #[cfg(test)]
         test_main();

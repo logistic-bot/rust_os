@@ -2,6 +2,7 @@
 #![cfg_attr(test, no_main)]
 #![feature(custom_test_frameworks)]
 #![feature(abi_x86_interrupt)]
+#![feature(alloc_error_handler)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
@@ -13,16 +14,24 @@ entry_point!(test_kernel_main);
 
 use core::panic::PanicInfo;
 
+extern crate alloc;
+
 pub mod gdt;
 pub mod interrupts;
 pub mod memory;
 pub mod serial;
 pub mod vga_buffer;
+pub mod allocator;
 
 pub fn hlt_loop() -> ! {
     loop {
         x86_64::instructions::hlt();
     }
+}
+
+#[alloc_error_handler]
+fn alloc_error_handler(layout: alloc::alloc::Layout) -> ! {
+    panic!("Allocation error: {:?}", layout)
 }
 
 /// Initialize hardware and software
@@ -74,6 +83,8 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     hlt_loop();
 }
 
+//noinspection RsUnresolvedReference
+// needed because of test_main
 /// Entry point for tests
 #[cfg(test)]
 fn test_kernel_main(_boot_info: &'static BootInfo) -> ! {
