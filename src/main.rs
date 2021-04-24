@@ -13,6 +13,8 @@ use bootloader::BootInfo;
 use core::panic::PanicInfo;
 use rust_os::{println, serial_println};
 use alloc::boxed::Box;
+use x86_64::VirtAddr;
+use rust_os::memory::BootinfoFrameAllocator;
 
 mod undoc {
     use bootloader::entry_point;
@@ -26,10 +28,19 @@ mod undoc {
 /// This function is not allowed to return
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use rust_os::memory;
-    use x86_64::{structures::paging::Page, VirtAddr};
+    use rust_os::allocator;
 
-    println!("Initialzing...");
+    println!("Hello World!");
     rust_os::init();
+
+    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mut mapper = unsafe { memory::init(phys_mem_offset) };
+    let mut frame_allocator = unsafe {
+        BootinfoFrameAllocator::init(&boot_info.memory_map)
+    };
+
+    allocator::init_heap(&mut mapper, &mut frame_allocator)
+        .expect("heap initialization failed");
 
     let x = Box::new(42);
 
