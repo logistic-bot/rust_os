@@ -9,8 +9,12 @@ use x86_64::{
 pub const HEAP_START: usize = 0x4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB FIXME: Automatically determine an appropriate size, or dynamically grow the heap
 
+use bump::BumpAllocator;
+
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+
+pub mod bump;
 
 pub fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>,
@@ -26,11 +30,11 @@ pub fn init_heap(
 
     // Map heap pages to physical frames
     for page in page_range {
-        let frame = frame_allocator.allocate_frame().ok_or(MapToError::FrameAllocationFailed)?;
+        let frame = frame_allocator
+            .allocate_frame()
+            .ok_or(MapToError::FrameAllocationFailed)?;
         let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
-        unsafe {
-            mapper.map_to(page, frame, flags, frame_allocator)?.flush()
-        };
+        unsafe { mapper.map_to(page, frame, flags, frame_allocator)?.flush() };
     }
 
     unsafe {
@@ -38,4 +42,31 @@ pub fn init_heap(
     }
 
     Ok(())
+}
+
+/// A wrapper around spin::Mutex to permit trait implementations.
+pub struct Locked<A> {
+    inner: spin::Mutex<A>,
+}
+
+impl<A> Locked<A> {
+    pub const fn new(inner: A) -> Self {
+        Locked {
+            inner: spin::Mutex::new(inner),
+        }
+    }
+
+    pub fn lock(&self) -> spin::MutexGuard<A> {
+        self.inner.lock()
+    }
+}
+
+/// Align the given address upwards to the given alignment.
+fn align_up(addr: usize, alignment: usize) -> usize {
+    let remainder = addr % alignment;
+    if remainder == 0 {
+        addr
+    } else {
+        addr - remainder + alignment
+    }
 }
