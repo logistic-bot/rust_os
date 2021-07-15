@@ -9,10 +9,8 @@ use x86_64::{
 pub const HEAP_START: usize = 0x4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB FIXME: Automatically determine an appropriate size, or dynamically grow the heap
 
-use bump::BumpAllocator;
-
 #[global_allocator]
-static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 pub mod bump;
 
