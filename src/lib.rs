@@ -5,6 +5,9 @@
 #![feature(alloc_error_handler)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
+#![deny(missing_docs)]
+
+//! rust_os Library
 
 #[cfg(test)]
 use bootloader::{entry_point, BootInfo};
@@ -16,14 +19,21 @@ use core::panic::PanicInfo;
 
 extern crate alloc;
 
+/// Memory allocations
 pub mod allocator;
+/// Global Descriptor Table
 pub mod gdt;
+/// Interrupts
 pub mod interrupts;
+/// Memory managment
 pub mod memory;
+/// Serial io
 pub mod serial;
+/// Task struct for async stuff
 pub mod task;
 pub mod vga_buffer;
 
+/// Halt the cpu in a loop, never returns.
 pub fn hlt_loop() -> ! {
     loop {
         x86_64::instructions::hlt();
@@ -47,6 +57,7 @@ pub fn init() {
 
 /// This trait marks a function as testable. It is used for testing
 pub trait Testable {
+    /// Runnable function
     fn run(&self);
 }
 
@@ -61,6 +72,7 @@ where
     }
 }
 
+/// Run each test sequentially.
 pub fn test_runner(tests: &[&dyn Testable]) {
     serial_println!("Running {} tests", tests.len());
 

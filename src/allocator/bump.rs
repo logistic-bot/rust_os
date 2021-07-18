@@ -2,6 +2,7 @@ use crate::allocator::{align_up, Locked};
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr;
 
+/// Allocate one piece of data after the other, reusing memory only when everything is freed.
 pub struct BumpAllocator {
     heap_start: usize,
     heap_end: usize,

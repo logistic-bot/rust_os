@@ -3,6 +3,7 @@ use spin::Mutex;
 use uart_16550::SerialPort;
 
 lazy_static! {
+    /// Serial Port n°1
     pub static ref SERIAL1: Mutex<SerialPort> = {
         let mut serial_port = unsafe { SerialPort::new(0x3f8) };
         serial_port.init();

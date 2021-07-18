@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use crate::gdt;
 use crate::print;
 use crate::println;
@@ -5,9 +7,12 @@ use lazy_static::lazy_static;
 use pic8259::ChainedPics;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
+/// Offset 1 of programmable interrupt timer
 pub const PIC_1_OFFSET: u8 = 32;
+/// Offset 2 of programmable interrupt timer
 pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
 
+/// Spin mutex of both chained interrupt timers
 pub static PICS: spin::Mutex<ChainedPics> =
     spin::Mutex::new(unsafe { ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET) });
 

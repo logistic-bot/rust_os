@@ -6,14 +6,20 @@ use x86_64::{
     VirtAddr,
 };
 
+/// Start of heap
 pub const HEAP_START: usize = 0x4444_4444_0000;
+/// Size of heap
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB FIXME: Automatically determine an appropriate size, or dynamically grow the heap
 
 #[global_allocator]
 static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
+/// Implements a simple bump allocator
 pub mod bump;
 
+/// Initialize the heap.
+///
+/// Maps heap pages to physical frames, and initializes the allocator.
 pub fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>,
     frame_allocator: &mut impl FrameAllocator<Size4KiB>,
@@ -48,12 +54,14 @@ pub struct Locked<A> {
 }
 
 impl<A> Locked<A> {
+    /// New Locked object. Allows for trait implementation. Wraps around spin::Mutex.
     pub const fn new(inner: A) -> Self {
         Locked {
             inner: spin::Mutex::new(inner),
         }
     }
 
+    /// Lock inner mutex
     pub fn lock(&self) -> spin::MutexGuard<A> {
         self.inner.lock()
     }
