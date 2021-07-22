@@ -9,3 +9,6 @@ clean:
 
 build:
 	cargo bootimage --release
+
+test:
+	cargo test

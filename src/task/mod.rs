@@ -5,6 +5,9 @@ use core::{future::Future, pin::Pin};
 /// Contains a very simple executor, executing each task sequentially until all are done
 pub mod simple_executor;
 
+/// Async keyboard driver
+pub mod keyboard;
+
 /// A task that contains a future returning ()
 pub struct Task {
     future: Pin<Box<dyn Future<Output = ()>>>,
