@@ -13,9 +13,10 @@ use bootloader::BootInfo;
 use core::panic::PanicInfo;
 use rust_os::memory::BootinfoFrameAllocator;
 use rust_os::println;
+#[allow(unused_imports)] // needed for tests
 use rust_os::serial_println;
 use rust_os::task::keyboard;
-use rust_os::task::{simple_executor::SimpleExecutor, Task};
+use rust_os::task::{executor::Executor, Task};
 use x86_64::VirtAddr;
 
 mod undoc {
@@ -45,13 +46,12 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     #[cfg(test)]
     test_main();
 
-    let mut executor = SimpleExecutor::new();
+    println!("Kernel initialized, starting task loop");
+
+    let mut executor = Executor::new();
     executor.spawn(Task::new(example_task()));
     executor.spawn(Task::new(keyboard::print_keypresses()));
     executor.run();
-
-    println!("Kernel initialized");
-    rust_os::hlt_loop();
 }
 
 async fn async_number() -> u32 {
